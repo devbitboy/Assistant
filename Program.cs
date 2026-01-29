@@ -1,43 +1,46 @@
 using System;
+using Assistant.ConsoleApp;
+
+var menu = new List<MenuOption>
+{
+    new("Settings", ShowSettings),
+    new("Commands", ShowCommands),
+};
 
 while (true)
 {
     Console.Clear();
     Console.WriteLine("=== Assistant ===");
-    Console.WriteLine("1) Settings");
-    Console.WriteLine("2) Commands");
+
+    for (var i = 0; i < menu.Count; i++)
+        Console.WriteLine($"{i + 1}) {menu[i].Title}");
+
     Console.WriteLine("0) Exit");
     Console.WriteLine();
-    Console.Write("Select an option: ");
 
-    var input = Console.ReadLine()?.Trim();
-
-    if (!int.TryParse(input, out var option))
+    var option = ConsoleUi.ReadOption("Select an option: ");
+    if (option is null)
     {
         Console.WriteLine("Invalid input. Please enter a number.");
-        Pause();
+        ConsoleUi.Pause();
         continue;
     }
 
-    switch (option)
+    if (option == 0)
     {
-        case 1:
-            ShowSettings();
-            break;
-
-        case 2:
-            ShowCommands();
-            break;
-
-        case 0:
-            Console.WriteLine("Bye!");
-            return;
-
-        default:
-            Console.WriteLine("Unknown option.");
-            Pause();
-            break;
+        Console.WriteLine("Bye!");
+        return;
     }
+
+    var index = option.Value - 1;
+    if (index < 0 || index >= menu.Count)
+    {
+        Console.WriteLine("Unknown option.");
+        ConsoleUi.Pause();
+        continue;
+    }
+
+    menu[index].Action();
 }
 
 static void ShowSettings()
@@ -45,7 +48,7 @@ static void ShowSettings()
     Console.Clear();
     Console.WriteLine("=== Settings ===");
     Console.WriteLine("(Coming soon)");
-    Pause();
+    ConsoleUi.Pause();
 }
 
 static void ShowCommands()
@@ -53,12 +56,5 @@ static void ShowCommands()
     Console.Clear();
     Console.WriteLine("=== Commands ===");
     Console.WriteLine("(Coming soon)");
-    Pause();
-}
-
-static void Pause()
-{
-    Console.WriteLine();
-    Console.Write("Press any key to continue...");
-    Console.ReadKey(true);
+    ConsoleUi.Pause();
 }
