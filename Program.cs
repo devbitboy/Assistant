@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Assistant.ConsoleApp;
+using System.IO;
+using System.Linq;
 
 var menu = new List<MenuOption>
 {
@@ -86,43 +88,7 @@ static void ShowSettings()
     }
 }
 
-static void OpenProjectInVsCode()
-{
-    var projectPath = @"C:\dev\Assistant";
-
-    // Ruta estándar de VS Code en Windows
-    var vsCodePath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        @"Programs\Microsoft VS Code\Code.exe"
-    );
-
-    try
-    {
-        if (!File.Exists(vsCodePath))
-        {
-            Console.WriteLine("VS Code was not found.");
-            Console.WriteLine("Please make sure Visual Studio Code is installed.");
-            ConsoleUi.Pause();
-            return;
-        }
-
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = vsCodePath,
-            Arguments = $"\"{projectPath}\"",
-            UseShellExecute = true
-        });
-
-        Console.WriteLine("Opening project in VS Code...");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine("Failed to open VS Code.");
-        Console.WriteLine(ex.Message);
-    }
-
-    ConsoleUi.Pause();
-}
+static void OpenProjectInVsCode() { var projectPath = @"C:\dev\Assistant"; if (!Directory.Exists(projectPath)) { Console.WriteLine($"Project path not found: {projectPath}"); ConsoleUi.Pause(); return; } var candidates = new[] { Path.Combine( Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Programs\Microsoft VS Code\Code.exe" ), Path.Combine( Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Microsoft VS Code\Code.exe" ), Path.Combine( Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft VS Code\Code.exe" ), }; var vsCodeExe = candidates.FirstOrDefault(File.Exists); if (vsCodeExe is null) { Console.WriteLine("VS Code was not found."); ConsoleUi.Pause(); return; } Process.Start(new ProcessStartInfo { FileName = vsCodeExe, Arguments = $"\"{projectPath}\"", UseShellExecute = true }); Console.WriteLine("Opening project in VS Code..."); ConsoleUi.Pause(); }
 
 static void ShowCommands()
 {
