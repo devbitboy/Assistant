@@ -1,5 +1,3 @@
-using System;
-
 namespace Assistant.ConsoleApp;
 
 public static class ConsoleUi
