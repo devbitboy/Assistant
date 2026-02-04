@@ -1,65 +1,36 @@
 using System.Diagnostics;
 using Assistant.ConsoleApp;
 
-List<MenuOption> menu =
+List<MenuOption> mainMenu =
 [
     new("Settings", ShowSettings),
     new("Commands", ShowCommands),
 ];
 
-
-while (true)
-{
-    Console.Clear();
-    Console.WriteLine("=== Assistant ===");
-
-    for (var i = 0; i < menu.Count; i++)
-        Console.WriteLine($"{i + 1}) {menu[i].Title}");
-
-    Console.WriteLine("0) Exit");
-    Console.WriteLine();
-
-    var option = ConsoleUi.ReadOption("Select an option: ");
-    if (option is null)
-    {
-        Console.WriteLine("Invalid input. Please enter a number.");
-        ConsoleUi.Pause();
-        continue;
-    }
-
-    if (option == 0)
-    {
-        Console.WriteLine("Bye!");
-        return;
-    }
-
-    var index = option.Value - 1;
-    if (index < 0 || index >= menu.Count)
-    {
-        Console.WriteLine("Unknown option.");
-        ConsoleUi.Pause();
-        continue;
-    }
-
-    menu[index].Action();
-}
+RunMenu("Assistant", mainMenu, "Exit", onExit: () => Console.WriteLine("Bye!"));
 
 static void ShowSettings()
 {
-    var settingsMenu = new List<MenuOption>
-    {
+    List<MenuOption> settingsMenu =
+    [
         new("Open Project in VS Code", OpenProjectInVsCode),
-    };
+    ];
 
+    RunMenu("Settings", settingsMenu, "Back");
+}
+
+static void RunMenu(string title, IReadOnlyList<MenuOption> options, string exitLabel, Action? onExit = null)
+{
     while (true)
     {
         Console.Clear();
-        Console.WriteLine("=== Settings ===");
+        Console.WriteLine($"=== {title} ===");
+        Console.WriteLine();
 
-        for (var i = 0; i < settingsMenu.Count; i++)
-            Console.WriteLine($"{i + 1}) {settingsMenu[i].Title}");
+        for (var i = 0; i < options.Count; i++)
+            Console.WriteLine($"{i + 1}) {options[i].Title}");
 
-        Console.WriteLine("0) Back");
+        Console.WriteLine($"0) {exitLabel}");
         Console.WriteLine();
 
         var option = ConsoleUi.ReadOption("Select an option: ");
@@ -71,19 +42,23 @@ static void ShowSettings()
         }
 
         if (option == 0)
+        {
+            onExit?.Invoke();
             return;
+        }
 
         var index = option.Value - 1;
-        if (index < 0 || index >= settingsMenu.Count)
+        if (index < 0 || index >= options.Count)
         {
             Console.WriteLine("Unknown option.");
             ConsoleUi.Pause();
             continue;
         }
 
-        settingsMenu[index].Action();
+        options[index].Action();
     }
 }
+
 
 static void OpenProjectInVsCode()
 {
@@ -164,11 +139,16 @@ static void OpenProjectInVsCode()
     }
 
     Process.Start(new ProcessStartInfo
+{
+    FileName = vsCodeExe,
+    UseShellExecute = true,
+    ArgumentList =
     {
-        FileName = vsCodeExe,
-        Arguments = $"\"{projectPath}\"",
-        UseShellExecute = true
-    });
+        "--reuse-window",
+        projectPath
+    }
+});
+
 
     Console.WriteLine("Opening project in VS Code...");
     ConsoleUi.Pause();
