@@ -1,11 +1,12 @@
 using System.Diagnostics;
 using Assistant.ConsoleApp;
 
-var menu = new List<MenuOption>
-{
+List<MenuOption> menu =
+[
     new("Settings", ShowSettings),
     new("Commands", ShowCommands),
-};
+];
+
 
 while (true)
 {
@@ -95,12 +96,15 @@ static void OpenProjectInVsCode()
         return;
     }
 
-    var candidates = new[]
+    // Prefer code.exe to avoid spawning a cmd window
+    var candidates = new List<string>
     {
+        // User install
         Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             @"Programs\Microsoft VS Code\Code.exe"
         ),
+        // System installs
         Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
             @"Microsoft VS Code\Code.exe"
@@ -111,13 +115,52 @@ static void OpenProjectInVsCode()
         ),
     };
 
+    // Try to resolve "code" from PATH and map it to code.exe when possible
+    var fromPath = TryResolveFromPath("code")
+                ?? TryResolveFromPath("code.cmd")
+                ?? TryResolveFromPath("code.exe");
+
+    if (!string.IsNullOrWhiteSpace(fromPath))
+    {
+        // If PATH points to code.cmd, try to infer sibling code.exe:
+        // e.g. ...\Microsoft VS Code\bin\code.cmd -> ...\Microsoft VS Code\Code.exe
+        var pathLower = fromPath.ToLowerInvariant();
+        if (pathLower.EndsWith(@"\bin\code.cmd") || pathLower.EndsWith(@"\bin\code"))
+        {
+            var maybeExe = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(fromPath)!, @"..\Code.exe"));
+            candidates.Insert(0, maybeExe);
+        }
+
+        // If PATH already is code.exe, use it
+        if (pathLower.EndsWith(@"\code.exe"))
+            candidates.Insert(0, fromPath);
+    }
+
     var vsCodeExe = candidates.FirstOrDefault(File.Exists);
 
     if (vsCodeExe is null)
     {
-        Console.WriteLine("VS Code was not found.");
-        ConsoleUi.Pause();
-        return;
+        // Last resort: try "code" (may open a cmd window depending on installation)
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "code",
+                Arguments = $"\"{projectPath}\"",
+                UseShellExecute = true
+            });
+
+            Console.WriteLine("Opening project in VS Code (via PATH)...");
+            ConsoleUi.Pause();
+            return;
+        }
+        catch
+        {
+            Console.WriteLine("VS Code was not found.");
+            Console.WriteLine("Tip: Install VS Code and enable the 'code' command in PATH.");
+            ConsoleUi.Pause();
+            return;
+        }
     }
 
     Process.Start(new ProcessStartInfo
@@ -129,6 +172,38 @@ static void OpenProjectInVsCode()
 
     Console.WriteLine("Opening project in VS Code...");
     ConsoleUi.Pause();
+}
+
+static string? TryResolveFromPath(string fileName)
+{
+    try
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = "where",
+            Arguments = fileName,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var p = Process.Start(psi);
+        if (p is null) return null;
+
+        var output = p.StandardOutput.ReadToEnd();
+        p.WaitForExit();
+
+        var firstLine = output
+            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault();
+
+        return string.IsNullOrWhiteSpace(firstLine) ? null : firstLine.Trim();
+    }
+    catch
+    {
+        return null;
+    }
 }
 
 static void ShowCommands()
