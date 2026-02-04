@@ -4,6 +4,7 @@ using Assistant.ConsoleApp;
 List<MenuOption> mainMenu =
 [
     new("Settings", ShowSettings),
+    new("Projects", ShowProjects),
     new("Commands", ShowCommands),
 ];
 
@@ -13,31 +14,40 @@ static void ShowSettings()
 {
     List<MenuOption> settingsMenu =
     [
-        new("Open Project in VS Code", OpenProjectInVsCode),
+        new("Open Project in VS Code", () => OpenProjectInVsCode(@"C:\dev\Assistant")),
     ];
 
     RunMenu("Settings", settingsMenu, "Back");
 }
+
+static void ShowProjects()
+{
+    List<MenuOption> projectsMenu =
+    [
+        new("Project Intelliflow", () => ShowMessageComingSoon("Project Intelliflow")),
+    ];
+
+    RunMenu("Projects", projectsMenu, "Back");
+}
+
+static void ShowCommands() => ShowMessageComingSoon("Commands");
 
 static void RunMenu(string title, IReadOnlyList<MenuOption> options, string exitLabel, Action? onExit = null)
 {
     while (true)
     {
         Console.Clear();
-        Console.WriteLine($"=== {title} ===");
-        Console.WriteLine();
+        Console.WriteLine($"=== {title} ===\n");
 
         for (var i = 0; i < options.Count; i++)
             Console.WriteLine($"{i + 1}) {options[i].Title}");
 
-        Console.WriteLine($"0) {exitLabel}");
-        Console.WriteLine();
+        Console.WriteLine($"0) {exitLabel}\n");
 
         var option = ConsoleUi.ReadOption("Select an option: ");
         if (option is null)
         {
-            Console.WriteLine("Invalid input. Please enter a number.");
-            ConsoleUi.Pause();
+            PrintAndPause("Invalid input. Please enter a number.");
             continue;
         }
 
@@ -50,8 +60,7 @@ static void RunMenu(string title, IReadOnlyList<MenuOption> options, string exit
         var index = option.Value - 1;
         if (index < 0 || index >= options.Count)
         {
-            Console.WriteLine("Unknown option.");
-            ConsoleUi.Pause();
+            PrintAndPause("Unknown option.");
             continue;
         }
 
@@ -59,20 +68,15 @@ static void RunMenu(string title, IReadOnlyList<MenuOption> options, string exit
     }
 }
 
-
-static void OpenProjectInVsCode()
+static void OpenProjectInVsCode(string projectPath)
 {
-    var projectPath = @"C:\dev\Assistant";
-
     if (!Directory.Exists(projectPath))
     {
-        Console.WriteLine($"Project path not found: {projectPath}");
-        ConsoleUi.Pause();
+        PrintAndPause($"Project path not found: {projectPath}");
         return;
     }
 
-    // Prefer code.exe to avoid spawning a cmd window
-    var candidates = new List<string>
+    var codeExeCandidates = new List<string>
     {
         // User install
         Path.Combine(
@@ -90,68 +94,60 @@ static void OpenProjectInVsCode()
         ),
     };
 
-    // Try to resolve "code" from PATH and map it to code.exe when possible
+    // Try to resolve "code" from PATH and map it to Code.exe when possible
     var fromPath = TryResolveFromPath("code")
                 ?? TryResolveFromPath("code.cmd")
                 ?? TryResolveFromPath("code.exe");
 
     if (!string.IsNullOrWhiteSpace(fromPath))
     {
-        // If PATH points to code.cmd, try to infer sibling code.exe:
-        // e.g. ...\Microsoft VS Code\bin\code.cmd -> ...\Microsoft VS Code\Code.exe
         var pathLower = fromPath.ToLowerInvariant();
+
         if (pathLower.EndsWith(@"\bin\code.cmd") || pathLower.EndsWith(@"\bin\code"))
         {
             var maybeExe = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(fromPath)!, @"..\Code.exe"));
-            candidates.Insert(0, maybeExe);
+            codeExeCandidates.Insert(0, maybeExe);
         }
 
-        // If PATH already is code.exe, use it
         if (pathLower.EndsWith(@"\code.exe"))
-            candidates.Insert(0, fromPath);
+            codeExeCandidates.Insert(0, fromPath);
     }
 
-    var vsCodeExe = candidates.FirstOrDefault(File.Exists);
+    var codeExe = codeExeCandidates.FirstOrDefault(File.Exists);
 
-    if (vsCodeExe is null)
+    try
     {
-        // Last resort: try "code" (may open a cmd window depending on installation)
-        try
+        if (codeExe is not null)
         {
+            // Best path: invoke Code.exe directly (no cmd window)
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = codeExe,
+                UseShellExecute = true,
+                ArgumentList = { "--reuse-window", projectPath }
+            });
+        }
+        else
+        {
+            // Fallback: "code" from PATH (sometimes code.cmd)
             Process.Start(new ProcessStartInfo
             {
                 FileName = "code",
-                Arguments = $"\"{projectPath}\"",
-                UseShellExecute = true
+                UseShellExecute = true,
+                Arguments = $"--reuse-window \"{projectPath}\""
             });
+        }
 
-            Console.WriteLine("Opening project in VS Code (via PATH)...");
-            ConsoleUi.Pause();
-            return;
-        }
-        catch
-        {
-            Console.WriteLine("VS Code was not found.");
-            Console.WriteLine("Tip: Install VS Code and enable the 'code' command in PATH.");
-            ConsoleUi.Pause();
-            return;
-        }
+        PrintAndPause("Opening project in VS Code...");
     }
-
-    Process.Start(new ProcessStartInfo
-{
-    FileName = vsCodeExe,
-    UseShellExecute = true,
-    ArgumentList =
+    catch (Exception ex)
     {
-        "--reuse-window",
-        projectPath
+        PrintAndPause(
+            "VS Code was not found or could not be started.\n" +
+            "Tip: Install VS Code and enable the 'code' command in PATH.\n\n" +
+            ex.Message
+        );
     }
-});
-
-
-    Console.WriteLine("Opening project in VS Code...");
-    ConsoleUi.Pause();
 }
 
 static string? TryResolveFromPath(string fileName)
@@ -174,11 +170,10 @@ static string? TryResolveFromPath(string fileName)
         var output = p.StandardOutput.ReadToEnd();
         p.WaitForExit();
 
-        var firstLine = output
+        return output
             .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-            .FirstOrDefault();
-
-        return string.IsNullOrWhiteSpace(firstLine) ? null : firstLine.Trim();
+            .FirstOrDefault()
+            ?.Trim();
     }
     catch
     {
@@ -186,10 +181,16 @@ static string? TryResolveFromPath(string fileName)
     }
 }
 
-static void ShowCommands()
+static void ShowMessageComingSoon(string title)
 {
     Console.Clear();
-    Console.WriteLine("=== Commands ===");
+    Console.WriteLine($"=== {title} ===");
     Console.WriteLine("(Coming soon)");
+    ConsoleUi.Pause();
+}
+
+static void PrintAndPause(string message)
+{
+    Console.WriteLine(message);
     ConsoleUi.Pause();
 }
