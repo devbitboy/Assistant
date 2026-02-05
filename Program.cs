@@ -10,26 +10,20 @@ List<MenuOption> mainMenu =
 
 RunMenu("Assistant", mainMenu, "Exit", onExit: () => Console.WriteLine("Bye!"));
 
-static void ShowSettings()
-{
-    List<MenuOption> settingsMenu =
+static void ShowSettings() =>
+    RunMenu("Settings",
     [
         new("Open Project in VS Code", () => OpenProjectInVsCode(@"C:\dev\Assistant")),
         new("Update Assistant", () => ShowMessageComingSoon("Update Assistant")),
-    ];
+    ],
+    "Back");
 
-    RunMenu("Settings", settingsMenu, "Back");
-}
-
-static void ShowProjects()
-{
-    List<MenuOption> projectsMenu =
+static void ShowProjects() =>
+    RunMenu("Projects",
     [
         new("Project Intelliflow", () => ShowMessageComingSoon("Project Intelliflow")),
-    ];
-
-    RunMenu("Projects", projectsMenu, "Back");
-}
+    ],
+    "Back");
 
 static void ShowCommands() => ShowMessageComingSoon("Commands");
 
