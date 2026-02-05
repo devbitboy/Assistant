@@ -15,6 +15,7 @@ static void ShowSettings()
     List<MenuOption> settingsMenu =
     [
         new("Open Project in VS Code", () => OpenProjectInVsCode(@"C:\dev\Assistant")),
+        new("Update Assistant", () => ShowMessageComingSoon("Update Assistant")),
     ];
 
     RunMenu("Settings", settingsMenu, "Back");
