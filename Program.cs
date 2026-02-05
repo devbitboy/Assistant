@@ -171,7 +171,7 @@ static string? TryResolveFromPath(string fileName)
         p.WaitForExit();
 
         return output
-            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
             .FirstOrDefault()
             ?.Trim();
     }
