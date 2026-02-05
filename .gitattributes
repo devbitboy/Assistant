@@ -6,7 +6,7 @@
 
 # Project files
 *.csproj text
-*.sln text
+*.slnx text
 
 # Scripts
 *.sh text eol=lf
