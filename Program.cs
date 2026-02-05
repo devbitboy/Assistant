@@ -37,8 +37,7 @@ static void RunMenu(string title, IReadOnlyList<MenuOption> options, string exit
 {
     while (true)
     {
-        Console.Clear();
-        Console.WriteLine($"=== {title} ===\n");
+        PrintHeader(title);
 
         for (var i = 0; i < options.Count; i++)
             Console.WriteLine($"{i + 1}) {options[i].Title}");
@@ -184,12 +183,16 @@ static string? TryResolveFromPath(string fileName)
 
 static void ShowMessageComingSoon(string title)
 {
-    Console.Clear();
-    Console.WriteLine($"=== {title} ===");
+    PrintHeader(title);
     Console.WriteLine("(Coming soon)");
     ConsoleUi.Pause();
 }
 
+static void PrintHeader(string title)
+{
+    Console.Clear();
+    Console.WriteLine($"=== {title} ===\n");
+}
 static void PrintAndPause(string message)
 {
     Console.WriteLine(message);
