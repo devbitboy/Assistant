@@ -2,17 +2,10 @@ using Assistant.Infrastructure;
 
 namespace Assistant.Application;
 
-public sealed class OpenAdminPowerShellCommand
+public sealed class OpenAdminPowerShellCommand(IAdminShellOpener opener)
 {
-    private readonly IAdminShellOpener _opener;
-
-    public OpenAdminPowerShellCommand(IAdminShellOpener opener)
-    {
-        _opener = opener;
-    }
-
     public void Execute()
     {
-        _opener.Open();
+        opener.Open();
     }
 }
