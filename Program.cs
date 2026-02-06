@@ -51,12 +51,13 @@ void OpenChatGpt()
 {
     try
     {
+        const string chatGptAppId =
+            @"shell:AppsFolder\OpenAI.ChatGPT-Desktop_2p2nqsd0c76g0!ChatGPT";
         Process.Start(new ProcessStartInfo
         {
             FileName = "explorer.exe",
             UseShellExecute = true,
-            Arguments =
-                "shell:AppsFolder\\OpenAI.ChatGPT-Desktop_2p2nqsd0c76g0!ChatGPT"
+            Arguments = $"\"{chatGptAppId}\""
         });
 
         PrintAndPause("Opening ChatGPT...");
@@ -78,7 +79,7 @@ static void ShowSettings() =>
         new("Update Assistant", () => ShowMessageComingSoon("Update Assistant")),
     ],
     "Back");
-    
+
 
 static void ShowProjects() =>
     RunMenu("Projects",
