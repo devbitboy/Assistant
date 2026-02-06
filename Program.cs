@@ -14,10 +14,12 @@ var openAdminShell =
 // Main Menu
 // ================================
 
+
 List<MenuOption> mainMenu =
 [
     new("Settings", ShowSettings),
     new("Projects", ShowProjects),
+    new("ChatGPT", OpenChatGpt),
     new("Commands", ShowCommands),
     new("Open PowerShell (Admin)", OpenPowerShellAdmin),
 ];
@@ -45,6 +47,30 @@ void OpenPowerShellAdmin()
     }
 }
 
+void OpenChatGpt()
+{
+    try
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "explorer.exe",
+            UseShellExecute = true,
+            Arguments =
+                "shell:AppsFolder\\OpenAI.ChatGPT-Desktop_2p2nqsd0c76g0!ChatGPT"
+        });
+
+        PrintAndPause("Opening ChatGPT...");
+    }
+    catch (Exception ex)
+    {
+        PrintAndPause(
+            "ChatGPT could not be started.\n" +
+            "Tip: Verify ChatGPT is installed correctly via winget.\n\n" +
+            ex.Message
+        );
+    }
+}
+
 static void ShowSettings() =>
     RunMenu("Settings",
     [
@@ -52,6 +78,7 @@ static void ShowSettings() =>
         new("Update Assistant", () => ShowMessageComingSoon("Update Assistant")),
     ],
     "Back");
+    
 
 static void ShowProjects() =>
     RunMenu("Projects",
