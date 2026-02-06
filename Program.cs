@@ -57,7 +57,7 @@ void OpenChatGpt()
         {
             FileName = "explorer.exe",
             UseShellExecute = true,
-            Arguments = $"\"{chatGptAppId}\""
+            ArgumentList = { chatGptAppId }
         });
 
         PrintAndPause("Opening ChatGPT...");
