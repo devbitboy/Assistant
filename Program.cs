@@ -6,6 +6,7 @@ List<MenuOption> mainMenu =
     new("Settings", ShowSettings),
     new("Projects", ShowProjects),
     new("Commands", ShowCommands),
+    new("Open PowerShell (Admin)", OpenPowerShellAsAdmin),
 ];
 
 RunMenu("Assistant", mainMenu, "Exit", onExit: () => Console.WriteLine("Bye!"));
@@ -26,6 +27,31 @@ static void ShowProjects() =>
     "Back");
 
 static void ShowCommands() => ShowMessageComingSoon("Commands");
+
+static void OpenPowerShellAsAdmin()
+{
+    try
+    {
+        // Equivalent to: Start-Process pwsh -Verb RunAs
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "pwsh",
+            UseShellExecute = true,
+            Verb = "runas",
+        });
+
+        PrintAndPause("Opening PowerShell as Administrator...");
+    }
+    catch (Exception ex)
+    {
+        // Common: user cancels UAC prompt -> Win32Exception
+        PrintAndPause(
+            "PowerShell could not be started as Administrator.\n" +
+            "Tip: Ensure PowerShell 7 (pwsh) is installed and available in PATH.\n\n" +
+            ex.Message
+        );
+    }
+}
 
 static void RunMenu(string title, IReadOnlyList<MenuOption> options, string exitLabel, Action? onExit = null)
 {
@@ -187,6 +213,7 @@ static void PrintHeader(string title)
     Console.Clear();
     Console.WriteLine($"=== {title} ===\n");
 }
+
 static void PrintAndPause(string message)
 {
     Console.WriteLine(message);
