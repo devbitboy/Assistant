@@ -1,15 +1,49 @@
 using System.Diagnostics;
+using Assistant.Application;
 using Assistant.ConsoleApp;
+using Assistant.Infrastructure;
+
+// ================================
+// Bootstrap / Composition Root
+// ================================
+
+var openAdminShell =
+    new OpenAdminPowerShellCommand(new PowerShellAdminOpener());
+
+// ================================
+// Main Menu
+// ================================
 
 List<MenuOption> mainMenu =
 [
     new("Settings", ShowSettings),
     new("Projects", ShowProjects),
     new("Commands", ShowCommands),
-    new("Open PowerShell (Admin)", OpenPowerShellAsAdmin),
+    new("Open PowerShell (Admin)", OpenPowerShellAdmin),
 ];
 
 RunMenu("Assistant", mainMenu, "Exit", onExit: () => Console.WriteLine("Bye!"));
+
+// ================================
+// Menu Actions (UI Layer)
+// ================================
+
+void OpenPowerShellAdmin()
+{
+    try
+    {
+        openAdminShell.Execute();
+        PrintAndPause("Opening PowerShell as Administrator...");
+    }
+    catch (Exception ex)
+    {
+        PrintAndPause(
+            "PowerShell could not be started as Administrator.\n" +
+            "Tip: Ensure PowerShell 7 (pwsh) is installed and available in PATH.\n\n" +
+            ex.Message
+        );
+    }
+}
 
 static void ShowSettings() =>
     RunMenu("Settings",
@@ -26,34 +60,18 @@ static void ShowProjects() =>
     ],
     "Back");
 
-static void ShowCommands() => ShowMessageComingSoon("Commands");
+static void ShowCommands() =>
+    ShowMessageComingSoon("Commands");
 
-static void OpenPowerShellAsAdmin()
-{
-    try
-    {
-        // Equivalent to: Start-Process pwsh -Verb RunAs
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = "pwsh",
-            UseShellExecute = true,
-            Verb = "runas",
-        });
+// ================================
+// Menu Engine
+// ================================
 
-        PrintAndPause("Opening PowerShell as Administrator...");
-    }
-    catch (Exception ex)
-    {
-        // Common: user cancels UAC prompt -> Win32Exception
-        PrintAndPause(
-            "PowerShell could not be started as Administrator.\n" +
-            "Tip: Ensure PowerShell 7 (pwsh) is installed and available in PATH.\n\n" +
-            ex.Message
-        );
-    }
-}
-
-static void RunMenu(string title, IReadOnlyList<MenuOption> options, string exitLabel, Action? onExit = null)
+static void RunMenu(
+    string title,
+    IReadOnlyList<MenuOption> options,
+    string exitLabel,
+    Action? onExit = null)
 {
     while (true)
     {
@@ -88,6 +106,10 @@ static void RunMenu(string title, IReadOnlyList<MenuOption> options, string exit
     }
 }
 
+// ================================
+// VS Code (todavía legacy)
+// ================================
+
 static void OpenProjectInVsCode(string projectPath)
 {
     if (!Directory.Exists(projectPath))
@@ -98,12 +120,10 @@ static void OpenProjectInVsCode(string projectPath)
 
     var codeExeCandidates = new List<string>
     {
-        // User install
         Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             @"Programs\Microsoft VS Code\Code.exe"
         ),
-        // System installs
         Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
             @"Microsoft VS Code\Code.exe"
@@ -114,7 +134,6 @@ static void OpenProjectInVsCode(string projectPath)
         ),
     };
 
-    // Try to resolve "code" from PATH and map it to Code.exe when possible
     var fromPath = TryResolveFromPath("code")
                 ?? TryResolveFromPath("code.cmd")
                 ?? TryResolveFromPath("code.exe");
@@ -125,7 +144,9 @@ static void OpenProjectInVsCode(string projectPath)
 
         if (pathLower.EndsWith(@"\bin\code.cmd") || pathLower.EndsWith(@"\bin\code"))
         {
-            var maybeExe = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(fromPath)!, @"..\Code.exe"));
+            var maybeExe = Path.GetFullPath(
+                Path.Combine(Path.GetDirectoryName(fromPath)!, @"..\Code.exe")
+            );
             codeExeCandidates.Insert(0, maybeExe);
         }
 
@@ -139,7 +160,6 @@ static void OpenProjectInVsCode(string projectPath)
     {
         if (codeExe is not null)
         {
-            // Best path: invoke Code.exe directly (no cmd window)
             Process.Start(new ProcessStartInfo
             {
                 FileName = codeExe,
@@ -149,7 +169,6 @@ static void OpenProjectInVsCode(string projectPath)
         }
         else
         {
-            // Fallback: "code" from PATH (sometimes code.cmd)
             Process.Start(new ProcessStartInfo
             {
                 FileName = "code",
@@ -200,6 +219,10 @@ static string? TryResolveFromPath(string fileName)
         return null;
     }
 }
+
+// ================================
+// UI Helpers
+// ================================
 
 static void ShowMessageComingSoon(string title)
 {
