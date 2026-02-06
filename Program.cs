@@ -52,12 +52,13 @@ void OpenChatGpt()
     try
     {
         const string chatGptAppId =
-            @"shell:AppsFolder\OpenAI.ChatGPT-Desktop_2p2nqsd0c76g0!ChatGPT";
+            "shell:AppsFolder\\OpenAI.ChatGPT-Desktop_2p2nqsd0c76g0!ChatGPT";
+
         Process.Start(new ProcessStartInfo
         {
-            FileName = "explorer.exe",
+            FileName = "cmd.exe",
             UseShellExecute = true,
-            ArgumentList = { chatGptAppId }
+            Arguments = $"/c start \"\" \"{chatGptAppId}\""
         });
 
         PrintAndPause("Opening ChatGPT...");
@@ -66,11 +67,18 @@ void OpenChatGpt()
     {
         PrintAndPause(
             "ChatGPT could not be started.\n" +
-            "Tip: Verify ChatGPT is installed correctly via winget.\n\n" +
+            "Opening browser fallback...\n\n" +
             ex.Message
         );
+
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "https://chat.openai.com/",
+            UseShellExecute = true
+        });
     }
 }
+
 
 static void ShowSettings() =>
     RunMenu("Settings",
