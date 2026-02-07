@@ -1,4 +1,4 @@
-namespace Assistant.Infrastructure;
+namespace Assistant.Application.Abstractions;
 
 public interface IAdminShellOpener
 {
