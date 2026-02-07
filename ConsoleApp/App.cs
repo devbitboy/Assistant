@@ -6,6 +6,7 @@ public sealed class App(
     OpenAdminPowerShellCommand openAdminPs,
     OpenChatGptCommand openChatGpt,
     OpenVsCodeFolderCommand openVsCodeFolder,
+    RestartAssistantCommand restartAssistant,
     string projectRootPath)
 {
     public void Run()
@@ -27,12 +28,14 @@ public sealed class App(
     // ================================
 
     private void ShowSettings() =>
-        RunMenu("Settings",
-        [
-            new("Open Project in VS Code", () => OpenVsCode(projectRootPath)),
-            new("Update Assistant", () => ShowMessageComingSoon("Update Assistant")),
-        ],
-        "Back");
+    RunMenu("Settings",
+    [
+        new("Open Project in VS Code", () => OpenVsCode(projectRootPath)),
+        new("Restart Assistant (clean + run)", RestartAssistant),
+        new("Update Assistant", () => ShowMessageComingSoon("Update Assistant")),
+    ],
+    "Back");
+
 
     private void ShowProjects() =>
         RunMenu("Projects",
@@ -74,7 +77,15 @@ public sealed class App(
         else
             PrintAndPause(result.Message ?? "VS Code could not be started.");
     }
+    private void RestartAssistant()
+    {
+        var result = restartAssistant.Execute(projectRootPath);
 
+        if (result.IsSuccess)
+            PrintAndPause(result.Message ?? "Restarting Assistant...");
+        else
+            PrintAndPause(result.Message ?? "Could not restart Assistant.");
+    }
     // ================================
     // Menu Engine
     // ================================
