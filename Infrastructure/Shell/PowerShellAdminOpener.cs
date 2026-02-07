@@ -18,7 +18,7 @@ public sealed class PowerShellAdminOpener : IAdminShellOpener
         });
     }
 
-    private string ResolveShell()
+    private static string ResolveShell()
     {
         if (WhereResolver.ExistsOnPath("pwsh")) return "pwsh";
         if (WhereResolver.ExistsOnPath("powershell")) return "powershell";
