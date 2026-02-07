@@ -2,7 +2,6 @@ using Assistant.Application.Abstractions;
 using Assistant.Application.Commands;
 using Assistant.ConsoleApp;
 using Assistant.Infrastructure.Apps;
-using Assistant.Infrastructure.Windows;
 using Assistant.Infrastructure.Shell;
 
 IAdminShellOpener adminShellOpener = new PowerShellAdminOpener();

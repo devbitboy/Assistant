@@ -1,5 +1,4 @@
 using Assistant.Application.Commands;
-using Assistant.ConsoleApp;
 
 namespace Assistant.ConsoleApp;
 

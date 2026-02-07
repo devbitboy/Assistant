@@ -10,7 +10,7 @@ public sealed class PowerShellAdminOpener : IAdminShellOpener
     {
         var shell = ResolveShell();
 
-        System.Diagnostics.Process.Start(new ProcessStartInfo
+        Process.Start(new ProcessStartInfo
         {
             FileName = shell,
             UseShellExecute = true,
