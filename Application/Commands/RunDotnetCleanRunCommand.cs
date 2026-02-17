@@ -12,7 +12,7 @@ public sealed class RunDotnetCleanRunCommand(ITerminalRunner terminal)
             // Puedes ajustar:
             // - Si quieres forzar un proyecto: dotnet run --project "ruta\algo.csproj"
             // - Si quieres configuration: dotnet run -c Debug
-            var command = "dotnet clean; dotnet run";
+            var command = "dotnet clean; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; dotnet run";
 
             terminal.OpenAndRun(projectRootPath, command);
 
