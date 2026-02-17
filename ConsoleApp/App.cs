@@ -7,18 +7,22 @@ public sealed class App(
     OpenChatGptCommand openChatGpt,
     OpenVsCodeFolderCommand openVsCodeFolder,
     RestartAssistantCommand restartAssistant,
+    ShutdownMenuCommand shutdownMenu,
     string projectRootPath)
+
 {
     public void Run()
     {
         List<MenuOption> mainMenu =
-        [
-            new("Settings", ShowSettings),
-            new("Projects", ShowProjects),
-            new("ChatGPT", OpenChatGpt),
-            new("Commands", ShowCommands),
-            new("Open PowerShell (Admin)", OpenPowerShellAdmin),
-        ];
+[
+    new("Settings", ShowSettings),
+    new("Projects", ShowProjects),
+    new("ChatGPT", OpenChatGpt),
+    new("Commands", ShowCommands),
+    new("Open PowerShell (Admin)", OpenPowerShellAdmin),
+    new("Shutdown", ShowShutdown),
+];
+
 
         RunMenu("Assistant", mainMenu, "Exit", onExit: () => Console.WriteLine("Bye!"));
     }
@@ -26,6 +30,36 @@ public sealed class App(
     // ================================
     // Screens (UI)
     // ================================
+    private void ShowShutdown() =>
+        RunMenu("Shutdown",
+        [
+            new("Restart PC (try close apps first)", () => RestartPc(true)),
+        new("Shutdown PC (try close apps first)", () => ShutdownPc(true)),
+        new("Sign out (try close apps first)", () => SignOut(true)),
+
+        // Opcionales “sin intentar cerrar apps”
+        new("Restart PC (immediate)", () => RestartPc(false)),
+        new("Shutdown PC (immediate)", () => ShutdownPc(false)),
+        ],
+        "Back");
+
+    private void RestartPc(bool tryCloseAppsFirst)
+    {
+        var result = shutdownMenu.RestartPc(tryCloseAppsFirst);
+        PrintAndPause(result.Message ?? "Restarting PC...");
+    }
+
+    private void ShutdownPc(bool tryCloseAppsFirst)
+    {
+        var result = shutdownMenu.ShutdownPc(tryCloseAppsFirst);
+        PrintAndPause(result.Message ?? "Shutting down PC...");
+    }
+
+    private void SignOut(bool tryCloseAppsFirst)
+    {
+        var result = shutdownMenu.SignOut(tryCloseAppsFirst);
+        PrintAndPause(result.Message ?? "Signing out...");
+    }
 
     private void ShowSettings() =>
     RunMenu("Settings",

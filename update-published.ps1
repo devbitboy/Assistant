@@ -1,20 +1,11 @@
 Set-Location "C:\dev\Assistant"
 
-dotnet publish -c Release -r win-x64 --self-contained true
+$dst  = "C:\dev\Assistant\publish-current"
+$proj = "C:\dev\Assistant\Assistant.csproj"  # AJUSTA
 
-$dst = "C:\dev\Assistant\publish-current\"
-
+if (Test-Path $dst) { Remove-Item "$dst\*" -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $dst | Out-Null
 
-# Copia el publish más reciente de forma determinística
-$latestPublishDir = Get-ChildItem "C:\dev\Assistant\bin\Release" -Recurse -Directory -Filter "publish" |
-  Sort-Object LastWriteTime -Descending |
-  Select-Object -First 1
+dotnet publish $proj -c Release -r win-x64 --self-contained true -o $dst
 
-if (-not $latestPublishDir) {
-    throw "No se encontró carpeta publish."
-}
-
-robocopy $latestPublishDir.FullName $dst /MIR | Out-Null
-
-Write-Host "Updated publish-current from: $($latestPublishDir.FullName)"
+Write-Host "Published directly to: $dst"
