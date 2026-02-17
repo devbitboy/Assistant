@@ -20,13 +20,17 @@ var restartAssistant = new RestartAssistantCommand(terminalRunner);
 
 var shutdownMenu = new ShutdownMenuCommand(systemPower);
 
+var updateAssistant = new UpdateAssistantCommand(terminalRunner);
+
 var app = new App(
     openAdminPs,
     openChatGpt,
     openVsCode,
     restartAssistant,
     shutdownMenu,
+    updateAssistant,
     projectRootPath: @"C:\dev\Assistant"
 );
+
 
 app.Run();

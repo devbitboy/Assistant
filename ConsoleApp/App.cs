@@ -8,6 +8,7 @@ public sealed class App(
     OpenVsCodeFolderCommand openVsCodeFolder,
     RestartAssistantCommand restartAssistant,
     ShutdownMenuCommand shutdownMenu,
+    UpdateAssistantCommand updateAssistant,
     string projectRootPath)
 
 {
@@ -66,11 +67,15 @@ public sealed class App(
     [
         new("Open Project in VS Code", () => OpenVsCode(projectRootPath)),
         new("Restart Assistant (clean + run)", RestartAssistant),
-        new("Update Assistant", () => ShowMessageComingSoon("Update Assistant")),
+        new("Update Assistant (publish + swap + restart)", UpdateAssistant),
     ],
     "Back");
 
-
+    private void UpdateAssistant()
+    {
+        var result = updateAssistant.Execute(projectRootPath);
+        PrintAndPause(result.Message ?? "Updating Assistant...");
+    }
     private void ShowProjects() =>
         RunMenu("Projects",
         [
