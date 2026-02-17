@@ -21,9 +21,19 @@ public sealed class WhereResolver
             using var p = Process.Start(psi);
             if (p is null) return null;
 
-            p.WaitForExit(2000);
-
+            // Leer primero (evita deadlocks por buffers) y luego esperar.
             var output = p.StandardOutput.ReadToEnd();
+            var error = p.StandardError.ReadToEnd();
+
+            if (!p.WaitForExit(2000))
+            {
+                try { p.Kill(entireProcessTree: true); } catch { /* ignore */ }
+                return null;
+            }
+
+            // Si no hubo output, no resolvió nada (o falló)
+            if (string.IsNullOrWhiteSpace(output))
+                return null;
 
             return output
                 .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)

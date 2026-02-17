@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using Assistant.Application.Abstractions;
 using Assistant.Infrastructure.Windows;
 
@@ -12,13 +13,22 @@ public sealed class PowerShellTerminalRunner : ITerminalRunner
             throw new DirectoryNotFoundException($"Working directory not found: {workingDirectory}");
 
         var shell = ResolveShell();
+        var encoded = Encode(script);
 
         Process.Start(new ProcessStartInfo
         {
             FileName = shell,
             UseShellExecute = true,
-            Arguments = $"-NoLogo -NoExit -Command \"{script}\""
+            Arguments = $"-NoLogo -NoExit -EncodedCommand {encoded}",
+            WorkingDirectory = workingDirectory
         });
+    }
+
+    private static string Encode(string script)
+    {
+        // PowerShell requiere UTF16-LE
+        var bytes = Encoding.Unicode.GetBytes(script);
+        return Convert.ToBase64String(bytes);
     }
 
     private static string ResolveShell()

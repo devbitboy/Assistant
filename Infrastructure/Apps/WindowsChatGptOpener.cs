@@ -24,7 +24,7 @@ public sealed class WindowsChatGptOpener : IChatGptOpener
             // fallback navegador (misma conducta que tenías)
             Process.Start(new ProcessStartInfo
             {
-                FileName = "https://chat.openai.com/",
+                FileName = "https://chatgpt.com/",
                 UseShellExecute = true
             });
         }
